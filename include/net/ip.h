@@ -311,7 +311,7 @@ static inline unsigned int ip_dst_mtu_maybe_forward(const struct dst_entry *dst,
 	    !forwarding)
 		return dst_mtu(dst);
 
-	return min(dst->dev->mtu, IP_MAX_MTU);
+	return min(READ_ONCE(dst->dev->mtu), IP_MAX_MTU);
 }
 
 static inline unsigned int ip_skb_dst_mtu(const struct sk_buff *skb)
@@ -320,7 +320,7 @@ static inline unsigned int ip_skb_dst_mtu(const struct sk_buff *skb)
 		bool forwarding = IPCB(skb)->flags & IPSKB_FORWARDED;
 		return ip_dst_mtu_maybe_forward(skb_dst(skb), forwarding);
 	} else {
-		return min(skb_dst(skb)->dev->mtu, IP_MAX_MTU);
+		return min(READ_ONCE(skb_dst(skb)->dev->mtu), IP_MAX_MTU);
 	}
 }
 
