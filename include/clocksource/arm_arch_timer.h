@@ -50,6 +50,7 @@ extern u64 (*arch_timer_read_counter)(void);
 extern struct timecounter *arch_timer_get_timecounter(void);
 extern u64 arch_counter_get_cntpct(void);
 extern u64 arch_counter_get_cntvct(void);
+extern bool arch_timer_evtstrm_available(void);
 
 #else
 
@@ -66,6 +67,11 @@ static inline u64 arch_timer_read_counter(void)
 static inline struct timecounter *arch_timer_get_timecounter(void)
 {
 	return NULL;
+}
+
+static inline bool arch_timer_evtstrm_available(void)
+{
+	return false;
 }
 
 static inline u64 arch_counter_get_cntpct(void) { return 0; }
