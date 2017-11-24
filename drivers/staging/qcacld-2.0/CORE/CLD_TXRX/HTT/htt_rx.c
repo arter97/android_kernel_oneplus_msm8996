@@ -2213,9 +2213,11 @@ htt_rx_amsdu_rx_in_order_pop_ll(
     unsigned int msdu_count = 0;
     u_int8_t offload_ind;
     struct htt_host_rx_desc_base *rx_desc;
-    enum rx_pkt_fate status = RX_PKT_FATE_SUCCESS;
     uint16_t peer_id;
     struct ol_txrx_peer_t *peer;
+#ifndef REMOVE_PKT_LOG
+    enum rx_pkt_fate status = RX_PKT_FATE_SUCCESS;
+#endif
 
     HTT_ASSERT1(htt_rx_in_order_ring_elems(pdev) != 0);
 
@@ -2292,13 +2294,14 @@ htt_rx_amsdu_rx_in_order_pop_ll(
 
         msdu_count--;
 
+#ifndef REMOVE_PKT_LOG
         /* calling callback function for packet logging */
-
         if (adf_os_unlikely((*((u_int8_t *) &rx_desc->fw_desc.u.val)) &
                     FW_RX_DESC_MIC_ERR_M))
             status = RX_PKT_FATE_FW_DROP_INVALID;
         if (pdev->rx_pkt_dump_cb)
             pdev->rx_pkt_dump_cb(msdu, peer, status);
+#endif
 
         if (adf_os_unlikely((*((u_int8_t *) &rx_desc->fw_desc.u.val)) &
                              FW_RX_DESC_MIC_ERR_M)) {

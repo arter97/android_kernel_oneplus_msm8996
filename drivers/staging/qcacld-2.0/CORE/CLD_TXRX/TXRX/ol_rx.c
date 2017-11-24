@@ -1646,8 +1646,11 @@ void ol_rx_pkt_dump_call(
 	if (pdev->ol_rx_packetdump_cb) {
 		if (!peer)
 			return;
+
+#ifndef REMOVE_PKT_LOG
 		pdev->ol_rx_packetdump_cb(msdu, status, peer->vdev->vdev_id,
 						RX_DATA_PKT);
+#endif
 	}
 }
 

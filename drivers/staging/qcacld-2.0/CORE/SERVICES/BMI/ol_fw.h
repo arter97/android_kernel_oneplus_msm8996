@@ -31,6 +31,7 @@
 #ifdef QCA_WIFI_FTM
 #include "vos_types.h"
 #endif
+#include "ol_if_athvar.h"
 
 #define AR6004_VERSION_REV1_3        0x31c8088a
 
@@ -163,11 +164,11 @@ void ol_target_failure(void *instance, A_STATUS status);
 u_int8_t ol_get_number_of_peers_supported(struct ol_softc *scn);
 
 #ifdef REMOVE_PKT_LOG
-static inline void ol_pktlog_init(void *)
+static void ol_pktlog_init(void *arg)
 {
 }
 #else
-void ol_pktlog_init(void *);
+void ol_pktlog_init(void *arg);
 #endif
 
 #if defined(HIF_SDIO)
