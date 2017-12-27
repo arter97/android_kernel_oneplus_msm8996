@@ -1384,7 +1384,7 @@ extern bool key_appselect_pressed;
 extern bool key_home_pressed;
 extern bool virtual_key_enable;
 #endif
-void int_touch(void)
+static inline void __int_touch(void)
 {
 	int ret = -1, i = 0;
 	uint8_t buf[90];
@@ -1601,6 +1601,11 @@ void int_touch(void)
 #endif
  INT_TOUCH_END:
 	mutex_unlock(&ts->mutexreport);
+}
+
+void int_touch(void)
+{
+	__int_touch();
 }
 
 static int synaptics_rmi4_free_fingers(struct synaptics_ts_data *ts)
