@@ -152,24 +152,24 @@ struct test_header {
 #define BIT6 (0x1 << 6)
 #define BIT7 (0x1 << 7)
 
-int LeftVee_gesture = 0;	//">"
-int RightVee_gesture = 0;	//"<"
-int DouSwip_gesture = 0;	// "||"
-int Circle_gesture = 0;		// "O"
-int UpVee_gesture = 0;		//"V"
-int DownVee_gesture = 0;	//"^"
-int DouTap_gesture = 0;		//"double tap"
+static int LeftVee_gesture;		/* > */
+static int RightVee_gesture;		/* < */
+static int DouSwip_gesture;		/* || */
+static int Circle_gesture;		/* O */
+static int UpVee_gesture;		/* V */
+static int DownVee_gesture;		/* ^ */
+static int DouTap_gesture;		/* double tap */
 
-int Left2RightSwip_gesture = 0;	//"(-->)"
-int Right2LeftSwip_gesture = 0;	//"(<--)"
-int Up2DownSwip_gesture = 0;	//"up to down |"
-int Down2UpSwip_gesture = 0;	//"down to up |"
+static int Left2RightSwip_gesture;	/* --> */
+static int Right2LeftSwip_gesture;	/* <-- */
+static int Up2DownSwip_gesture;	/* |v */
+static int Down2UpSwip_gesture;	/* |^ */
 
-int Wgestrue_gesture = 0;	//"(W)"
-int Mgestrue_gesture = 0;	//"(M)"
-int Sgestrue_gesture = 0;	//"(S)"
-static int gesture_switch = 0;
-//ruanbanmao@BSP add for tp gesture 2015-05-06, end
+static int Wgestrue_gesture;		/* W */
+static int Mgestrue_gesture;		/* M */
+static int Sgestrue_gesture;		/* S */
+static int gesture_switch;
+/*ruanbanmao@BSP add for tp gesture 2015-05-06 */
 #endif
 
 /*********************for Debug LOG switch*******************/
