@@ -231,7 +231,7 @@ int ion_system_secure_heap_prefetch(struct ion_heap *heap, void *ptr)
 		spin_unlock_irqrestore(&secure_heap->work_lock, flags);
 		goto out_free;
 	}
-	list_splice_init(&items, &secure_heap->prefetch_list);
+	list_splice_tail_init(&items, &secure_heap->prefetch_list);
 	schedule_work(&secure_heap->prefetch_work);
 	spin_unlock_irqrestore(&secure_heap->work_lock, flags);
 
