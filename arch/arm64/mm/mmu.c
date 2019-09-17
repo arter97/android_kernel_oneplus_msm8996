@@ -412,9 +412,9 @@ struct dma_contig_early_reserve {
 	unsigned long size;
 };
 
-static struct dma_contig_early_reserve dma_mmu_remap[MAX_CMA_AREAS];
+static struct dma_contig_early_reserve dma_mmu_remap[MAX_CMA_AREAS] __initdata;
 
-static int dma_mmu_remap_num;
+static int dma_mmu_remap_num __initdata;
 
 void __init dma_contiguous_early_fixup(phys_addr_t base, unsigned long size)
 {
