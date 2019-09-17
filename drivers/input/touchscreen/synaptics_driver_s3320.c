@@ -3682,7 +3682,7 @@ static int checkFlashState(struct i2c_client *client)
 static int synaptics_fw_check(struct synaptics_ts_data *ts)
 {
 	int ret;
-	uint8_t buf[4];
+	uint8_t buf[14];
 	uint32_t bootloader_mode;
 	int max_y_ic = 0;
 	int max_x_ic = 0;
