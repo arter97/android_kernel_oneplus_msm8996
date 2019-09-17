@@ -1061,8 +1061,10 @@ static int msm_core_dev_probe(struct platform_device *pdev)
 
 	key = "qcom,polling-interval";
 	ret = of_property_read_u32(node, key, &poll_ms);
-	if (ret)
-		pr_info("msm-core initialized without polling period\n");
+	if (ret || !poll_ms) {
+		poll_ms = 100;
+		pr_warn("msm-core initialized with default polling period\n");
+	}
 
 	key = "qcom,throttling-temp";
 	ret = of_property_read_u32(node, key, &max_throttling_temp);
