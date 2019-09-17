@@ -75,8 +75,10 @@ SYSCALL_DEFINE3(init_module, void __user *, umod,
 	return 0;
 }
 
+extern int hdd_driver_init(void);
 SYSCALL_DEFINE3(finit_module, int, fd, const char __user *, uargs, int, flags)
 {
+	hdd_driver_init();
 	return 0;
 }
 #else

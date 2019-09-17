@@ -311,7 +311,7 @@ static const struct cfg80211_wowlan wowlan_config = {
 #endif
 
 /* Internal function declarations */
-static int hdd_driver_init(void);
+int hdd_driver_init(void);
 static void hdd_driver_exit(void);
 
 /* Internal function declarations */
@@ -18182,12 +18182,16 @@ static int hdd_register_fail_clean_up(v_CONTEXT_t vos_context)
   \return - 0 for success, non zero for failure
 
   --------------------------------------------------------------------------*/
-static int hdd_driver_init( void)
+static bool hdd_inited = false;
+int hdd_driver_init( void)
 {
    VOS_STATUS status;
    v_CONTEXT_t pVosContext = NULL;
    int ret_status = 0;
    u_int64_t start;
+
+   if (hdd_inited)
+      return 0;
 
    start = adf_get_boottime();
 
@@ -18246,7 +18250,7 @@ static int hdd_driver_init( void)
             hdd_allow_suspend(WIFI_POWER_EVENT_WAKELOCK_DRIVER_INIT);
             hdd_wlan_wakelock_destroy();
          }
-         return ret_status;
+         goto out;
       }
 #else
       if (WLAN_IS_EPPING_ENABLED(hdd_get_conparam())) {
@@ -18257,7 +18261,7 @@ static int hdd_driver_init( void)
             hdd_allow_suspend(WIFI_POWER_EVENT_WAKELOCK_DRIVER_INIT);
             hdd_wlan_wakelock_destroy();
          }
-         return ret_status;
+         goto out;
       }
 #endif
 
@@ -18284,7 +18288,8 @@ static int hdd_driver_init( void)
       pr_info("%s: driver loaded in %lld\n", WLAN_MODULE_NAME,
              adf_get_boottime() - start);
       hdd_allow_suspend(WIFI_POWER_EVENT_WAKELOCK_DRIVER_INIT);
-      return 0;
+      ret_status = 0;
+      goto out;
    }
 
    hddLog(VOS_TRACE_LEVEL_FATAL, "%s: WLAN Driver Initialization failed",
@@ -18298,6 +18303,8 @@ static int hdd_driver_init( void)
 
    EXIT();
 
+out:
+   hdd_inited = true;
    return ret_status;
 }
 #ifdef FEATURE_LARGE_PREALLOC
@@ -18540,7 +18547,6 @@ static void __exit hdd_module_exit(void)
    hdd_driver_exit();
 }
 
-#ifdef MODULE
 static int fwpath_changed_handler(const char *kmessage,
                                   const struct kernel_param *kp)
 {
@@ -18554,79 +18560,6 @@ static int con_mode_handler(const char *kmessage,
    return param_set_int(kmessage, kp);
 }
 #endif
-#else /* #ifdef MODULE */
-
-/**---------------------------------------------------------------------------
-
-  \brief fwpath_changed_handler() - Handler Function
-
-   Handle changes to the fwpath parameter
-
-  \return - 0 for success, non zero for failure
-
-  --------------------------------------------------------------------------*/
-static int fwpath_changed_handler(const char *kmessage,
-                                  const struct kernel_param *kp)
-{
-	int ret;
-	bool mode_change;
-
-	ret = param_set_copystring(kmessage, kp);
-
-	if (!ret) {
-		bool ready;
-
-		ret = strncmp(fwpath_mode_local, kmessage , 3);
-		mode_change = ret ? true : false;
-
-
-		pr_info("%s : new_mode : %s, present_mode : %s\n", __func__,
-			kmessage, fwpath_mode_local);
-
-		strlcpy(fwpath_mode_local, kmessage,
-			sizeof(fwpath_mode_local));
-
-		ready = vos_is_load_unload_ready(__func__);
-
-		if (!ready) {
-			VOS_ASSERT(0);
-			return -EINVAL;
-		}
-
-		vos_load_unload_protect(__func__);
-		ret = kickstart_driver(true, mode_change);
-		vos_load_unload_unprotect(__func__);
-	}
-
-	return ret;
-}
-
-#if ! defined(QCA_WIFI_FTM)
-/**---------------------------------------------------------------------------
-
-  \brief con_mode_handler() -
-
-  Handler function for module param con_mode when it is changed by user space
-  Dynamically linked - do nothing
-  Statically linked - exit and init driver, as in rmmod and insmod
-
-  \param  -
-
-  \return -
-
-  --------------------------------------------------------------------------*/
-static int con_mode_handler(const char *kmessage,
-                            const struct kernel_param *kp)
-{
-   int ret;
-
-   ret = param_set_int(kmessage, kp);
-   if (0 == ret)
-      ret = kickstart_driver(true, false);
-   return ret;
-}
-#endif
-#endif /* #ifdef MODULE */
 
 #endif
 /**---------------------------------------------------------------------------
