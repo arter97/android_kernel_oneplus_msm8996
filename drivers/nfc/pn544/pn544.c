@@ -54,7 +54,7 @@
 #include <linux/of_gpio.h>
 #include <linux/miscdevice.h>
 #include <linux/spinlock.h>
-#include <pn544.h>
+#include "pn544.h"
 #include <asm/siginfo.h>
 #include <linux/rcupdate.h>
 #include <linux/sched.h>
