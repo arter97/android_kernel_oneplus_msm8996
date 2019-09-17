@@ -51,6 +51,7 @@ Module.symvers
 
 # ramfs
 !/ramdisk/**
+!/recovery/**
 
 #
 # Debian directory (make deb-pkg)
