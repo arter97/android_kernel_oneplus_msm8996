@@ -29,7 +29,9 @@ find /sys/devices -name read_ahead_kb | while read node; do echo 128 > $node; do
 
 killall msm_irqbalance
 sleep 1
-start vendor.msm_irqbalance' >> /dev/post_boot
+start vendor.msm_irqbalance
+
+echo 9 > /sys/fs/selinux/enforce' >> /dev/post_boot
 chmod 755 /dev/post_boot
 mount --bind /dev/post_boot /vendor/bin/init.qcom.post_boot.sh
 chcon "u:object_r:qti_init_shell_exec:s0" /vendor/bin/init.qcom.post_boot.sh
