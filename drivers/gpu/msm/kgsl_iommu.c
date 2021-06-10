@@ -1,4 +1,4 @@
-/* Copyright (c) 2011-2019, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2011-2021, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -265,6 +265,7 @@ static void kgsl_setup_qdss_desc(struct kgsl_device *device)
 		return;
 	}
 
+	spin_lock_init(&gpu_qdss_desc.lock);
 	gpu_qdss_desc.flags = 0;
 	gpu_qdss_desc.priv = 0;
 	gpu_qdss_desc.physaddr = gpu_qdss_entry[0];
@@ -635,7 +636,7 @@ static void _get_entries(struct kgsl_process_private *private,
 		prev->flags = p->memdesc.flags;
 		prev->priv = p->memdesc.priv;
 		prev->pending_free = p->pending_free;
-		prev->pid = private->pid;
+		prev->pid = pid_nr(private->pid);
 		__kgsl_get_memory_usage(prev);
 	}
 
@@ -645,7 +646,7 @@ static void _get_entries(struct kgsl_process_private *private,
 		next->flags = n->memdesc.flags;
 		next->priv = n->memdesc.priv;
 		next->pending_free = n->pending_free;
-		next->pid = private->pid;
+		next->pid = pid_nr(private->pid);
 		__kgsl_get_memory_usage(next);
 	}
 }
@@ -843,11 +844,21 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 		no_page_fault_log = kgsl_mmu_log_fault_addr(mmu, ptbase, addr);
 
 	if (!no_page_fault_log && __ratelimit(&_rs)) {
+		const char *api_str;
+
+		if (context != NULL) {
+			struct adreno_context *drawctxt =
+					ADRENO_CONTEXT(context);
+
+			api_str = get_api_type_str(drawctxt->type);
+		} else
+			api_str = "UNKNOWN";
+
 		KGSL_MEM_CRIT(ctx->kgsldev,
 			"GPU PAGE FAULT: addr = %lX pid= %d\n", addr, ptname);
 		KGSL_MEM_CRIT(ctx->kgsldev,
-			"context=%s TTBR0=0x%llx CIDR=0x%x (%s %s fault)\n",
-			ctx->name, ptbase, contextidr,
+			"context=%s ctx_type=%s TTBR0=0x%llx CIDR=0x%x (%s %s fault)\n",
+			ctx->name, api_str, ptbase, contextidr,
 			write ? "write" : "read", fault_type);
 
 		/* Don't print the debug if this is a permissions fault */
@@ -1438,6 +1449,7 @@ static int _setstate_alloc(struct kgsl_device *device,
 {
 	int ret;
 
+	spin_lock_init(&iommu->setstate.lock);
 	ret = kgsl_sharedmem_alloc_contig(device, &iommu->setstate, PAGE_SIZE);
 
 	if (!ret) {
@@ -2226,6 +2238,22 @@ static uint64_t kgsl_iommu_find_svm_region(struct kgsl_pagetable *pagetable,
 	return addr;
 }
 
+static bool iommu_addr_in_svm_ranges(struct kgsl_iommu_pt *pt,
+	u64 gpuaddr, u64 size)
+{
+	if ((gpuaddr >= pt->compat_va_start && gpuaddr < pt->compat_va_end) &&
+		((gpuaddr + size) > pt->compat_va_start &&
+			(gpuaddr + size) <= pt->compat_va_end))
+		return true;
+
+	if ((gpuaddr >= pt->svm_start && gpuaddr < pt->svm_end) &&
+		((gpuaddr + size) > pt->svm_start &&
+			(gpuaddr + size) <= pt->svm_end))
+		return true;
+
+	return false;
+}
+
 static int kgsl_iommu_set_svm_region(struct kgsl_pagetable *pagetable,
 		uint64_t gpuaddr, uint64_t size)
 {
@@ -2233,9 +2261,8 @@ static int kgsl_iommu_set_svm_region(struct kgsl_pagetable *pagetable,
 	struct kgsl_iommu_pt *pt = pagetable->priv;
 	struct rb_node *node;
 
-	/* Make sure the requested address doesn't fall in the global range */
-	if (ADDR_IN_GLOBAL(pagetable->mmu, gpuaddr) ||
-			ADDR_IN_GLOBAL(pagetable->mmu, gpuaddr + size))
+	/* Make sure the requested address doesn't fall out of SVM range */
+	if (!iommu_addr_in_svm_ranges(pt, gpuaddr, size))
 		return -ENOMEM;
 
 	spin_lock(&pagetable->lock);
@@ -2301,6 +2328,11 @@ static int kgsl_iommu_get_gpuaddr(struct kgsl_pagetable *pagetable,
 		goto out;
 	}
 
+	/*
+	 * This path is only called in a non-SVM path with locks so we can be
+	 * sure we aren't racing with anybody so we don't need to worry about
+	 * taking the lock
+	 */
 	ret = _insert_gpuaddr(pagetable, addr, size);
 	if (ret == 0) {
 		memdesc->gpuaddr = addr;

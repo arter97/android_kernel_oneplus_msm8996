@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2014-2017, The Linux Foundation. All rights reserved.
+ * Copyright (c) 2014-2017,2019, The Linux Foundation. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -1071,6 +1071,7 @@ static int qusb_phy_set_suspend(struct usb_phy *phy, int suspend)
 				qusb_phy_enable_clocks(qphy, false);
 			else
 				dev_dbg(phy->dev, "race with rm_pulldown. Keep clocks ON\n");
+
 			qusb_phy_update_tcsr_level_shifter(qphy, 0x0);
 			/* Do not disable power rails if there is vote for it */
 			if (!qphy->rm_pulldown)

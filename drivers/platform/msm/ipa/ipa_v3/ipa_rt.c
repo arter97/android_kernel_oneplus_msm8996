@@ -1545,8 +1545,7 @@ int __ipa3_del_rt_rule(u32 rule_hdl)
 
 	if (entry->hdr)
 		__ipa3_release_hdr(entry->hdr->id);
-	else if (entry->proc_ctx &&
-		(!ipa3_check_idr_if_freed(entry->proc_ctx)))
+	else if (entry->proc_ctx)
 		__ipa3_release_hdr_proc_ctx(entry->proc_ctx->id);
 	list_del(&entry->link);
 	entry->tbl->rule_cnt--;
@@ -1730,7 +1729,9 @@ int ipa3_reset_rt(enum ipa_ip_type ip, bool user_only)
 						"Header already deleted\n");
 						return -EINVAL;
 					}
-				} else if (rule->proc_ctx) {
+				} else if (rule->proc_ctx &&
+					(!ipa3_check_idr_if_freed(
+						rule->proc_ctx))) {
 					hdr_proc_entry =
 						ipa3_id_find(
 						rule->rule.hdr_proc_ctx_hdl);
